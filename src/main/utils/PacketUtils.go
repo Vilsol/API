@@ -6,8 +6,24 @@ import (
 	"encoding/binary"
 )
 
+type Buffer struct {
+	Data []byte
+}
+
 type PacketParser struct {
 	Reader *bufio.Reader
+	Buffer *Buffer
+}
+
+func NewParser(reader *bufio.Reader) (PacketParser) {
+	buffer := Buffer{make([]byte, 0)}
+
+	parser := PacketParser{
+		Reader: reader,
+		Buffer: &buffer,
+	}
+
+	return parser
 }
 
 /**
@@ -103,6 +119,9 @@ func (parser PacketParser) ReadBytes(bytes int) []byte {
 		result[i], _ = parser.Reader.ReadByte()
 	}
 
+	appended := append(parser.Buffer.Data, result...)
+	parser.Buffer.Data = appended
+
 	return result
 }
 
@@ -114,7 +133,7 @@ func (parser PacketParser) DiscardBytes(bytes int) {
 		return
 	}
 
-	parser.Reader.Discard(bytes)
+	parser.ReadBytes(bytes)
 }
 
 /**
@@ -131,6 +150,13 @@ func (parser PacketParser) SkipWhile(byte byte) {
 			break
 		}
 
-		parser.Reader.Discard(1)
+		parser.ReadBytes(1)
 	}
+}
+
+/**
+Get all bytes that this parser processed
+ */
+func (parser PacketParser) ProcessAllBytes() {
+	parser.ReadBytes(parser.Reader.Buffered())
 }

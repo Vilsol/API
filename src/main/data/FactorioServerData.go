@@ -19,6 +19,7 @@ type FactorioServerDataModel struct {
 	Address string
 	Players []string
 	Mods []FactorioModModel
+	ServerResponse []byte
 }
 
 type FactorioModModel struct {
@@ -30,7 +31,6 @@ type FactorioModModel struct {
 type FactorioServerData struct {
 	Address string
 	Port int
-	Parser utils.PacketParser
 }
 
 func (serverData *FactorioServerData) QueryServer() *FactorioServerDataModel {
@@ -71,11 +71,7 @@ func (serverData *FactorioServerData) QueryServer() *FactorioServerDataModel {
 
 	conn.Write([]byte{0x04, 0xa9, 0x76, 0x39, 0x22, 0x5b, 0x86, response[12], response[13], response[14], response[15], 0x6b, 0x39, 0x34, 0x9d, 0x08, 0x4a, 0x6f, 0x68, 0x6e, 0x20, 0x44, 0x6f, 0x65, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x6e, 0xae, 0x93, 0xd3, 0x01, 0x00, 0x00, 0x00, 0x04, 0x62, 0x61, 0x73, 0x65, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
 
-	parser := utils.PacketParser{
-		Reader: *&reader,
-	}
-
-	serverData.Parser = parser
+	parser := utils.NewParser(reader)
 
 	// Initialize
 	reader.Peek(1)
@@ -216,6 +212,8 @@ func (serverData *FactorioServerData) QueryServer() *FactorioServerDataModel {
 
 	conn.Close()
 
+	parser.ProcessAllBytes()
+
 	return &FactorioServerDataModel{
 		ServerQueryData: ServerQueryData{},
 		Name:            name,
@@ -225,5 +223,6 @@ func (serverData *FactorioServerData) QueryServer() *FactorioServerDataModel {
 		Address:         address,
 		Players:         players,
 		Mods:            mods,
+		ServerResponse:  parser.Buffer.Data,
 	}
 }
