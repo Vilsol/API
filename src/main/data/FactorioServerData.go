@@ -12,25 +12,26 @@ import (
 type FactorioServerDataModel struct {
 	ServerQueryData
 
-	Name string
-	Description string
-	Version string
-	Tags []string
-	Address string
-	Players []string
-	Mods []FactorioModModel
+	Name           string
+	Description    string
+	Version        string
+	Tags           []string
+	Address        string
+	Players        []string
+	Mods           []FactorioModModel
 	ServerResponse []byte
+	Spectrum       map[int][]utils.Spectre
 }
 
 type FactorioModModel struct {
-	Name string
+	Name    string
 	Version string
-	Hash string
+	Hash    string
 }
 
 type FactorioServerData struct {
 	Address string
-	Port int
+	Port    int
 }
 
 func (serverData *FactorioServerData) QueryServer() *FactorioServerDataModel {
@@ -42,7 +43,7 @@ func (serverData *FactorioServerData) QueryServer() *FactorioServerDataModel {
 		serverData.Port = 34197
 	}
 
-	conn, err := net.DialTimeout("udp", serverData.Address + ":" + strconv.Itoa(serverData.Port), time.Duration(100)*time.Millisecond)
+	conn, err := net.DialTimeout("udp", serverData.Address+":"+strconv.Itoa(serverData.Port), time.Duration(100)*time.Millisecond)
 
 	if err != nil {
 		fmt.Printf("Some error %v", err)
@@ -133,7 +134,7 @@ func (serverData *FactorioServerData) QueryServer() *FactorioServerDataModel {
 	// Read player count
 	var modCount = parser.ReadInt(4)
 
-	mods = make([]FactorioModModel, modCount)
+	mods = make([]FactorioModModel, 0)
 
 	// Read all players
 	for i := 0; i < modCount; i++ {
@@ -152,11 +153,11 @@ func (serverData *FactorioServerData) QueryServer() *FactorioServerDataModel {
 		// Read mod hash
 		var modHash = string(parser.ReadBytes(4))
 
-		mods[i] = FactorioModModel {
+		mods = append(mods, FactorioModModel{
 			Name:    modName,
 			Version: strconv.Itoa(major) + "." + strconv.Itoa(minor) + "." + strconv.Itoa(patch),
 			Hash:    modHash,
-		}
+		})
 	}
 
 	// Offset 10 garbage? bytes
@@ -167,6 +168,8 @@ func (serverData *FactorioServerData) QueryServer() *FactorioServerDataModel {
 
 	// TODO Temporary
 	if nameLength >= 255 {
+		parser.ProcessAllBytes()
+
 		conn.Close()
 
 		return &FactorioServerDataModel{
@@ -178,6 +181,8 @@ func (serverData *FactorioServerData) QueryServer() *FactorioServerDataModel {
 			Address:         serverData.Address + ":" + strconv.Itoa(serverData.Port),
 			Players:         players,
 			Mods:            mods,
+			ServerResponse:  parser.Buffer.Data,
+			Spectrum:        parser.Spectrometer(),
 		}
 	}
 
@@ -210,9 +215,9 @@ func (serverData *FactorioServerData) QueryServer() *FactorioServerDataModel {
 		_, tags[i] = parser.ReadString(4)
 	}
 
-	conn.Close()
-
 	parser.ProcessAllBytes()
+
+	conn.Close()
 
 	return &FactorioServerDataModel{
 		ServerQueryData: ServerQueryData{},
@@ -224,5 +229,6 @@ func (serverData *FactorioServerData) QueryServer() *FactorioServerDataModel {
 		Players:         players,
 		Mods:            mods,
 		ServerResponse:  parser.Buffer.Data,
+		Spectrum:        parser.Spectrometer(),
 	}
 }

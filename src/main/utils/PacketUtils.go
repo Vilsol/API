@@ -159,4 +159,90 @@ Get all bytes that this parser processed
  */
 func (parser PacketParser) ProcessAllBytes() {
 	parser.ReadBytes(parser.Reader.Buffered())
+
+	c1 := make(chan int, 1)
+	go func() {
+		parser.Reader.Peek(1)
+		c1 <- 1
+	}()
+
+	for true {
+		stop := false
+
+		select {
+		case _ = <-c1:
+			parser.ReadBytes(parser.Reader.Buffered())
+		case <-time.After(time.Millisecond * 100):
+			stop = true
+			break
+		}
+
+		if stop {
+			break
+		}
+	}
+}
+
+type Spectre struct {
+	Length int
+	Data   string
+	Start  int
+	End    int
+}
+
+/**
+Parse through entire buffer and return all possible strings
+ */
+func (parser PacketParser) Spectrometer() map[int][]Spectre {
+	parser.ProcessAllBytes()
+
+	spectrum := make(map[int][]Spectre)
+	claimed := make([]bool, len(parser.Buffer.Data))
+
+	for _, num := range []int{4, 2, 1} {
+		spectrum[num] = make([]Spectre, 0)
+
+		for i := 0; i < len(parser.Buffer.Data)-num; i++ {
+
+			var length int
+			b := parser.Buffer.Data[i:i+num]
+
+			if num == 1 {
+				length = int(b[0])
+			} else if num == 2 {
+				length = int(binary.LittleEndian.Uint16(b))
+			} else if num == 4 {
+				length = int(binary.LittleEndian.Uint32(b))
+			} else if num == 8 {
+				length = int(binary.LittleEndian.Uint64(b))
+			}
+
+			if length > 0 {
+				if i+length < len(parser.Buffer.Data) {
+					valid := true
+					for j := i + num; j < i+num+length; j++ {
+						if parser.Buffer.Data[j] < 32 || claimed[j] {
+							valid = false
+							break
+						}
+					}
+
+					if valid {
+						spectrum[num] = append(spectrum[num], Spectre{
+							Length: length,
+							Data:   string(parser.Buffer.Data[i+num:i+num+length]),
+							Start:  i,
+							End:    i + num + length,
+						})
+
+						for j := i; j < i + num + length; j++ {
+							claimed[j] = true
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return spectrum
 }
