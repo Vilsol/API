@@ -1,14 +1,15 @@
-package main
+package api
 
 import (
-	"github.com/gorilla/mux"
-	"net/http"
 	"encoding/json"
-	"log"
-	"regexp"
-	"main/data"
-	"strconv"
 	"fmt"
+	"log"
+	"me/vilsol/api/data"
+	"net/http"
+	"regexp"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {

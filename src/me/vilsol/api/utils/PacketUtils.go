@@ -2,8 +2,8 @@ package utils
 
 import (
 	"bufio"
-	"time"
 	"encoding/binary"
+	"time"
 )
 
 type Buffer struct {

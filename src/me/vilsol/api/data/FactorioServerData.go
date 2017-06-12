@@ -1,12 +1,12 @@
 package data
 
 import (
-	"net"
-	"time"
-	"fmt"
-	"strconv"
 	"bufio"
-	"main/utils"
+	"fmt"
+	"me/vilsol/api/utils"
+	"net"
+	"strconv"
+	"time"
 )
 
 type FactorioServerDataModel struct {
