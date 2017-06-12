@@ -9,5 +9,5 @@ type ServerQueryData struct {
 
 type ServerData struct {
 	address string
-	port int
+	port    int
 }

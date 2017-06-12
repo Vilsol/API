@@ -15,7 +15,7 @@ type PacketParser struct {
 	Buffer *Buffer
 }
 
-func NewParser(reader *bufio.Reader) (PacketParser) {
+func NewParser(reader *bufio.Reader) PacketParser {
 	buffer := Buffer{make([]byte, 0)}
 
 	parser := PacketParser{
@@ -28,7 +28,7 @@ func NewParser(reader *bufio.Reader) (PacketParser) {
 
 /**
 Read an integer from n amount of bytes
- */
+*/
 func (parser PacketParser) ReadInt(bytes int) int {
 	if !parser.WaitUntilBuffered(bytes) {
 		return 0
@@ -52,7 +52,7 @@ func (parser PacketParser) ReadInt(bytes int) int {
 
 /**
 Peek an integer from n amount of bytes
- */
+*/
 func (parser PacketParser) PeekInt(bytes int) int {
 	if !parser.WaitUntilBuffered(bytes) {
 		return 0
@@ -76,7 +76,7 @@ func (parser PacketParser) PeekInt(bytes int) int {
 
 /**
 Read a string from an integer of n amount of bytes
- */
+*/
 func (parser PacketParser) ReadString(bytes int) (int, string) {
 	var length = parser.ReadInt(bytes)
 
@@ -89,7 +89,7 @@ func (parser PacketParser) ReadString(bytes int) (int, string) {
 
 /**
 Wait until n amount of bytes are buffered or timeout after 50ms
- */
+*/
 func (parser PacketParser) WaitUntilBuffered(bytes int) bool {
 	if parser.Reader.Buffered() < bytes {
 		for i := 0; i < 50; i++ {
@@ -107,7 +107,7 @@ func (parser PacketParser) WaitUntilBuffered(bytes int) bool {
 
 /**
 Read n amount of bytes
- */
+*/
 func (parser PacketParser) ReadBytes(bytes int) []byte {
 	if !parser.WaitUntilBuffered(bytes) {
 		return nil
@@ -127,7 +127,7 @@ func (parser PacketParser) ReadBytes(bytes int) []byte {
 
 /**
 Discard n amount of bytes
- */
+*/
 func (parser PacketParser) DiscardBytes(bytes int) {
 	if !parser.WaitUntilBuffered(bytes) {
 		return
@@ -138,7 +138,7 @@ func (parser PacketParser) DiscardBytes(bytes int) {
 
 /**
 Skip bytes that match provided byte
- */
+*/
 func (parser PacketParser) SkipWhile(byte byte) {
 	for true {
 		if !parser.WaitUntilBuffered(1) {
@@ -156,7 +156,7 @@ func (parser PacketParser) SkipWhile(byte byte) {
 
 /**
 Get all bytes that this parser processed
- */
+*/
 func (parser PacketParser) ProcessAllBytes() {
 	parser.ReadBytes(parser.Reader.Buffered())
 
@@ -192,7 +192,7 @@ type Spectre struct {
 
 /**
 Parse through entire buffer and return all possible strings
- */
+*/
 func (parser PacketParser) Spectrometer() map[int][]Spectre {
 	parser.ProcessAllBytes()
 
@@ -205,7 +205,7 @@ func (parser PacketParser) Spectrometer() map[int][]Spectre {
 		for i := 0; i < len(parser.Buffer.Data)-num; i++ {
 
 			var length int
-			b := parser.Buffer.Data[i:i+num]
+			b := parser.Buffer.Data[i : i+num]
 
 			if num == 1 {
 				length = int(b[0])
@@ -230,12 +230,12 @@ func (parser PacketParser) Spectrometer() map[int][]Spectre {
 					if valid {
 						spectrum[num] = append(spectrum[num], Spectre{
 							Length: length,
-							Data:   string(parser.Buffer.Data[i+num:i+num+length]),
+							Data:   string(parser.Buffer.Data[i+num : i+num+length]),
 							Start:  i,
 							End:    i + num + length,
 						})
 
-						for j := i; j < i + num + length; j++ {
+						for j := i; j < i+num+length; j++ {
 							claimed[j] = true
 						}
 					}

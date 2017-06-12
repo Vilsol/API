@@ -32,7 +32,6 @@ func main() {
 			Port:    port,
 		}
 
-
 		query := serverData.QueryServer()
 
 		encoder.Encode(query)
