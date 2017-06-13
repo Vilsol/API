@@ -1,4 +1,4 @@
-package api
+package main
 
 import (
 	"encoding/json"
@@ -32,7 +32,12 @@ func main() {
 			Port:    port,
 		}
 
-		query := serverData.QueryServer()
+		query, err := serverData.QueryServer()
+
+		if query == nil {
+			encoder.Encode(err)
+			return
+		}
 
 		encoder.Encode(query)
 	})

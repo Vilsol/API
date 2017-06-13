@@ -1,7 +1,7 @@
 package data
 
 type ServerQuery interface {
-	QueryServer() ServerQueryData
+	QueryServer() (ServerQueryData, error)
 }
 
 type ServerQueryData struct {

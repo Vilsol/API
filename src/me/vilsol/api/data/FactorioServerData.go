@@ -2,6 +2,7 @@ package data
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"me/vilsol/api/utils"
 	"net"
@@ -34,7 +35,7 @@ type FactorioServerData struct {
 	Port    int
 }
 
-func (serverData *FactorioServerData) QueryServer() *FactorioServerDataModel {
+func (serverData *FactorioServerData) QueryServer() (*FactorioServerDataModel, error) {
 	var name, description, version string
 	var tags, players []string
 	var mods []FactorioModModel
@@ -47,7 +48,7 @@ func (serverData *FactorioServerData) QueryServer() *FactorioServerDataModel {
 
 	if err != nil {
 		fmt.Printf("Some error %v", err)
-		return nil
+		return nil, err
 	}
 
 	ping := []byte{0x02, 0xa8, 0x76, 0x00, 0x00, 0x00, 0x8a, 0x74, 0x39, 0x22, 0x5b, 0x86}
@@ -63,7 +64,7 @@ func (serverData *FactorioServerData) QueryServer() *FactorioServerDataModel {
 
 	if err != nil {
 		fmt.Printf("Some error %v\n", err)
-		return nil
+		return nil, err
 	}
 
 	serverMajor, serverMinor, serverPatch := int(response[3]), int(response[4]), int(response[5])
@@ -183,7 +184,7 @@ func (serverData *FactorioServerData) QueryServer() *FactorioServerDataModel {
 			Mods:            mods,
 			ServerResponse:  parser.Buffer.Data,
 			Spectrum:        parser.Spectrometer(),
-		}
+		}, errors.New("Could not process packet correctly")
 	}
 
 	// Read mod name
@@ -230,5 +231,5 @@ func (serverData *FactorioServerData) QueryServer() *FactorioServerDataModel {
 		Mods:            mods,
 		ServerResponse:  parser.Buffer.Data,
 		Spectrum:        parser.Spectrometer(),
-	}
+	}, nil
 }
